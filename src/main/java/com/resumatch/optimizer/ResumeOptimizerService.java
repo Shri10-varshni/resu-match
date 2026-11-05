@@ -3,6 +3,7 @@ package com.resumatch.optimizer;
 import com.resumatch.project.StudentProject;
 import com.resumatch.project.StudentProjectRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -31,6 +32,7 @@ public class ResumeOptimizerService {
         this.projectRepository = projectRepository;
     }
 
+    @Transactional(readOnly = true)
     public OptimizeResumeResponse optimize(String jobDescription) {
         Set<String> jobKeywords = keywords(jobDescription);
         LocalDate today = LocalDate.now();

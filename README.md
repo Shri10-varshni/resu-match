@@ -15,7 +15,7 @@ The in-memory H2 database is initialized from `src/main/resources/data.sql`. Hea
 ## Optimize a resume
 
 ```sh
-curl -X POST http://localhost:8080/api/v1/optimize-resume \
+curl -X POST http://localhost:8081/api/v1/optimize-resume \
   -H 'Content-Type: application/json' \
   -d '{"jobDescription":"Java Spring Boot REST API developer"}'
 ```
@@ -27,6 +27,7 @@ The response contains projects with at least one matching keyword, ordered by sc
 ```sh
 mvn -B clean verify
 docker build -t resumatch:local .
+docker run --rm -p 8081:8081 resumatch:local
 ```
 
 ## CI/CD prerequisites
@@ -44,13 +45,13 @@ sudo k3s ctr images import resumatch-image.tar
 rm resumatch-image.tar
 kubectl apply -f k8s/
 kubectl rollout status deployment/resumatch
-kubectl port-forward service/resumatch 8080:80
+kubectl port-forward service/resumatch 8081:80
 ```
 
 The playbook installs a kubeconfig at `~/.kube/config` for the Ansible user. K3s and the Kubernetes manifests use the standard Kubernetes API. To deploy to a cloud cluster later, update the active kubeconfig/context, push the image to a registry reachable by the cluster, and set the Deployment image to that registry path (for example, `kubectl set image deployment/resumatch resumatch=registry.example.com/resumatch:1.0.0`).
 
 ```sh
-curl -X POST http://localhost:8080/api/v1/optimize-resume \
+curl -X POST http://localhost:8081/api/v1/optimize-resume \
   -H 'Content-Type: application/json' \
   -d '{"jobDescription":"Java Spring Boot REST API developer"}'
 ```

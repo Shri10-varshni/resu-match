@@ -6,4 +6,4 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     static_configs:
       - targets:
-          - resumatch:8080
+          - resumatch:80
