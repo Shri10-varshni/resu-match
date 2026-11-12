@@ -46,8 +46,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.projectKey=Shri10-varshni_resu-match
+            -Dsonar.host.url=https://sonarcloud.io
 
   deploy-local-k3s:
     name: Deploy to Local K3s
