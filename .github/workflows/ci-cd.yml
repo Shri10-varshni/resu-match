@@ -69,4 +69,4 @@ jobs:
         run: |
           kubectl apply -f k8s/
           kubectl set image deployment/resumatch resumatch="resumatch:${{ github.run_number }}"
-          kubectl rollout status deployment/resumatch --timeout=180s
+          kubectl rollout status deployment/resumatch --timeout=300s

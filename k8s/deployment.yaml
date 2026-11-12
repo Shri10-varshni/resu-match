@@ -19,9 +19,10 @@ spec:
       labels:
         app: resumatch
     spec:
+      terminationGracePeriodSeconds: 15
       containers:
         - name: resumatch
-          # In cloud CI/CD, Jenkins will replace this with your registry tag (e.g., docker.io/user/resumatch:1.0)
+          # GitHub Actions overrides this tag dynamically with resumatch:<run_number>
           image: resumatch:local
           imagePullPolicy: IfNotPresent
           ports:
@@ -31,7 +32,7 @@ spec:
             httpGet:
               path: /actuator/health
               port: http
-            failureThreshold: 24
+            failureThreshold: 36
             periodSeconds: 5
           readinessProbe:
             httpGet:
@@ -57,7 +58,7 @@ spec:
             runAsUser: 10001
             capabilities:
               drop:
-                - AL
+                - ALL
           volumeMounts:
             - name: tmp
               mountPath: /tmp
