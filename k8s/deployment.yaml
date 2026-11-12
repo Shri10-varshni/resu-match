@@ -5,7 +5,7 @@ metadata:
   labels:
     app: resumatch
 spec:
-  replicas: 1 # Set to 2+ in cloud for high availability
+  replicas: 2 # Set to 2+ in cloud for high availability
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -23,8 +23,8 @@ spec:
       containers:
         - name: resumatch
           # GitHub Actions overrides this tag dynamically with resumatch:<run_number>
-          image: resumatch:local
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/shri10-varshni/resumatch:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8081

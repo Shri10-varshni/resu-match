@@ -48,25 +48,50 @@ jobs:
           mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.host.url=https://sonarcloud.io
 
-  deploy-local-k3s:
-    name: Deploy to Local K3s
+  deploy-to-aks:
+    name: Push Image & Deploy to Azure AKS
     needs: build-and-analyze
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Build Docker image and import into K3s
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/shri10-varshni/resumatch:${{ github.run_number }}
+            ghcr.io/shri10-varshni/resumatch:latest
+
+      - name: Configure AKS kubectl
         run: |
-          IMAGE_TAG="resumatch:${{ github.run_number }}"
-          docker build -t "$IMAGE_TAG" .
-          TMP_TAR=$(mktemp)
-          trap 'rm -f "$TMP_TAR"' EXIT
-          docker save --output "$TMP_TAR" "$IMAGE_TAG"
-          sudo k3s ctr images import "$TMP_TAR"
+          mkdir -p ~/.kube
+          printf '%s' "${{ secrets.KUBE_CONFIG }}" | tr -d '\r\n ' | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
 
-      - name: Deploy to K3s
+      - name: Apply Monitoring ConfigMaps
+        run: |
+          kubectl create configmap prometheus-config --from-file=monitoring/prometheus.yml --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create configmap grafana-datasources --from-file=monitoring/grafana/provisioning/datasources/ --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create configmap grafana-dashboards-prov --from-file=monitoring/grafana/provisioning/dashboards/ --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create configmap grafana-dashboards --from-file=monitoring/grafana/dashboards/ --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Azure AKS
         run: |
           kubectl apply -f k8s/
-          kubectl set image deployment/resumatch resumatch="resumatch:${{ github.run_number }}"
+          kubectl set image deployment/resumatch resumatch="ghcr.io/shri10-varshni/resumatch:${{ github.run_number }}"
           kubectl rollout status deployment/resumatch --timeout=300s

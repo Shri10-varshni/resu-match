@@ -5,7 +5,7 @@ metadata:
   labels:
     app: resumatch
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: resumatch
   ports:
